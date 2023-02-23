@@ -1,0 +1,6 @@
+data
+build
+output
+venv
+*.spec
+*.csv
