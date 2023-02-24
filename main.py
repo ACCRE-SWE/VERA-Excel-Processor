@@ -14,15 +14,20 @@ SPONSOR_GENERAL = "SPONSOR_SUMMARY_GENERAL"
 SPONSOR_SUBAWARDS = "SPONSOR_SUMMARY_SUBAWARDS"
 
 
-COST_SHARE ="COST_SHARE"
-COST_SHARE_PERSONNEL = "COST_SHARE_PERSONNEL"
-COST_SHARE_GENERAL = "COST_SHARE_GENERAL"
-COST_SHARE_SUBAWARDS = "COST_SHARE_SUBAWARD"
+COST_SHARE_SUMMARY ="COST_SHARE_SUMMARY"
+COST_SHARE_SUMMARY_PERSONNEL = "COST_SHARE_SUMMARY_PERSONNEL"
+COST_SHARE_SUMMARY_GENERAL = "COST_SHARE_SUMMARY_GENERAL"
+COST_SHARE_SUMMARY_SUBAWARDS = "COST_SHARE_SUMMARY_SUBAWARD"
 
 FUNDS_REQUESTED = "FUNDS_REQUESTED"
 FUNDS_REQUESTED_PERSONNEL = "FUNDS_REQUESTED_PERSONNEL"
 FUNDS_REQUESTED_GENERAL = "FUNDS_REQUESTED_GENERAL"
 FUNDS_REQUESTED_SUBAWARDS = "FUNDS_REQUESTED_SUBAWARD"
+
+COST_SHARE ="COST_SHARE"
+COST_SHARE_PERSONNEL = "COST_SHARE_PERSONNEL"
+COST_SHARE_GENERAL = "COST_SHARE_GENERAL"
+COST_SHARE_SUBAWARDS = "COST_SHARE_SUBAWARD"
 
 
 #CONSTS
@@ -35,10 +40,12 @@ LINE_BREAK_SECTIONS = [
     SUMMARY_SUBAWARDS,
     SPONSOR_GENERAL,
     SPONSOR_SUBAWARDS,
-    COST_SHARE_GENERAL,
-    COST_SHARE_SUBAWARDS,
+    COST_SHARE_SUMMARY_GENERAL,
+    COST_SHARE_SUMMARY_SUBAWARDS,
     FUNDS_REQUESTED_GENERAL,
     FUNDS_REQUESTED_SUBAWARDS,
+    COST_SHARE_GENERAL,
+    COST_SHARE_SUBAWARDS,
 ]
 
 
@@ -66,13 +73,13 @@ def get_current_section(current_section, row):
         current_section = SPONSOR_SUBAWARDS
 
     elif current_section == SPONSOR_SUBAWARDS and "Cost Share Summary:" in val:
-        current_section = COST_SHARE
-    elif current_section == COST_SHARE and  PERSONNEL in val:
-        current_section = COST_SHARE_PERSONNEL
-    elif current_section == COST_SHARE_PERSONNEL and  GENERAL in val:
-        current_section = COST_SHARE_GENERAL
-    elif current_section == COST_SHARE_GENERAL and SUBAWARD in val:
-        current_section = COST_SHARE_SUBAWARDS
+        current_section = COST_SHARE_SUMMARY
+    elif current_section == COST_SHARE_SUMMARY and  PERSONNEL in val:
+        current_section = COST_SHARE_SUMMARY_PERSONNEL
+    elif current_section == COST_SHARE_SUMMARY_PERSONNEL and  GENERAL in val:
+        current_section = COST_SHARE_SUMMARY_GENERAL
+    elif current_section == COST_SHARE_SUMMARY_GENERAL and SUBAWARD in val:
+        current_section = COST_SHARE_SUMMARY_SUBAWARDS
     
     elif "Funds Requested" in val:
         current_section = FUNDS_REQUESTED
@@ -82,6 +89,16 @@ def get_current_section(current_section, row):
         current_section = FUNDS_REQUESTED_GENERAL
     elif current_section == FUNDS_REQUESTED_GENERAL and SUBAWARD in val:
         current_section = FUNDS_REQUESTED_SUBAWARDS
+
+      
+    elif "Cost Share" in val:
+        current_section = COST_SHARE
+    elif current_section == COST_SHARE and  PERSONNEL in val:
+        current_section = COST_SHARE_PERSONNEL
+    elif current_section == COST_SHARE_PERSONNEL and  GENERAL in val:
+        current_section = COST_SHARE_GENERAL
+    elif current_section == COST_SHARE_GENERAL and SUBAWARD in val:
+        current_section = COST_SHARE_SUBAWARDS
         
     return current_section
     
@@ -141,7 +158,8 @@ def process_line_breaks(row):
 
 
 def formatter(file_path):
-    df = pd.read_excel(file_path)
+    df = pd.read_excel(file_path,header=None)
+    df.fillna("",inplace=True)
     change_copy = df.copy(deep=True)
     skip_next = False
     current_section, old_section = None, None
@@ -167,7 +185,7 @@ def formatter(file_path):
                 change_copy.reset_index()
                 index_offset += len(new_rows) - 1
             
-            if current_section == FUNDS_REQUESTED_PERSONNEL:
+            if current_section == FUNDS_REQUESTED_PERSONNEL or current_section == COST_SHARE_PERSONNEL:
                 index, row = next(itr) # salaries
                 index, row = next(itr) # benifits
                 index, row = next(itr)
@@ -207,7 +225,7 @@ def open_file():
         filename = askopenfilename(filetypes=[("Excel files","*.xlsx")])
         df = formatter(filename)
         name = filename.split(".xlsx")[0]
-        df.to_excel(f"{name}_output.xlsx")
+        df.to_excel(f"{name}_output.xlsx",header=None,index=None)
         showinfo(title="Success", message="File exported successfully. Check alongside the input file.")
     except Exception as error:
         showerror(title="Failed", message=f"Something went wrong. Error: {str(error)}")
